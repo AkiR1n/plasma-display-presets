@@ -1,0 +1,23 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "aki@example.invalid",
+                "Name": "Aki"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Save and restore display layouts with one click",
+        "EnabledByDefault": true,
+        "Icon": "video-display",
+        "Id": "com.aki.plasma.displaypresets",
+        "License": "GPL-3.0-or-later",
+        "Name": "Display Presets",
+        "Version": "0.1.0",
+        "Website": "https://kde.org/plasma-desktop"
+    },
+    "X-Plasma-API": "declarativeappletscript",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "ui/main.qml"
+}
