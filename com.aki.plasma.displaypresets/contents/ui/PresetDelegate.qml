@@ -12,6 +12,7 @@ import "code/DisplayPreset.js" as PresetLogic
 Rectangle {
     id: root
 
+    readonly property string translationDomain: "plasma_applet_com.aki.plasma.displaypresets"
     required property var preset
     required property var autoRules
     required property bool busy
@@ -23,6 +24,8 @@ Rectangle {
     required property string currentConnectionSignature
     required property bool rulesExpanded
     required property int autoRuleCount
+    required property var formatPresetSummary
+    required property var formatAutoTrigger
 
     signal beginRename()
     signal renameInputEdited(string text)
@@ -36,8 +39,11 @@ Rectangle {
     signal autoRuleToggled(var rule, bool enabled)
     signal autoRuleDeleted(var rule)
 
-    readonly property real compactSpacing: Math.max(4, Kirigami.Units.smallSpacing * 0.85)
-    readonly property real compactMargin: Kirigami.Units.smallSpacing
+    readonly property string presetSummary: root.formatPresetSummary(root.preset)
+    readonly property real compactSpacing: Math.max(2, Kirigami.Units.smallSpacing * 0.55)
+    readonly property real compactMargin: Math.max(3, Kirigami.Units.smallSpacing * 0.55)
+    readonly property real compactButtonPadding: Math.max(3, Kirigami.Units.smallSpacing * 0.6)
+    readonly property real compactButtonHeight: Math.max(Kirigami.Units.iconSizes.small + 6, Kirigami.Units.gridUnit * 1.45)
 
     radius: Kirigami.Units.cornerRadius
     color: Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1,
@@ -57,13 +63,13 @@ Rectangle {
 
         QQC2.MenuItem {
             enabled: !root.busy
-            text: i18n("Overwrite Current Layout")
+            text: i18nd(root.translationDomain, "Overwrite Current Layout")
             onTriggered: root.overwriteClicked()
         }
 
         QQC2.MenuItem {
             enabled: !root.busy
-            text: i18n("Rename")
+            text: i18nd(root.translationDomain, "Rename")
             onTriggered: root.beginRename()
         }
 
@@ -72,7 +78,7 @@ Rectangle {
 
         QQC2.MenuItem {
             enabled: !root.busy
-            text: i18n("Delete")
+            text: i18nd(root.translationDomain, "Delete")
             onTriggered: root.deleteClicked()
         }
     }
@@ -90,6 +96,7 @@ Rectangle {
             PlasmaComponents3.Label {
                 Layout.fillWidth: true
                 font.weight: Font.DemiBold
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize
                 elide: Text.ElideRight
                 text: root.preset.name
                 visible: !root.isEditing
@@ -111,8 +118,10 @@ Rectangle {
                 visible: !root.isEditing
                 enabled: !root.busy
                 icon.name: "application-menu"
-                text: i18n("More actions")
+                text: i18nd(root.translationDomain, "More actions")
                 display: PlasmaComponents3.AbstractButton.IconOnly
+                implicitWidth: Kirigami.Units.iconSizes.smallMedium + root.compactButtonPadding
+                implicitHeight: Kirigami.Units.iconSizes.smallMedium + root.compactButtonPadding
                 onClicked: moreMenu.open()
                 QQC2.ToolTip.visible: hovered
                 QQC2.ToolTip.text: text
@@ -126,19 +135,20 @@ Rectangle {
             width: parent.width
 
             StatusBadge {
-                text: root.currentConnectionBound ? i18n("Current match") : ""
-                fillColor: Qt.tint(Kirigami.Theme.highlightColor, Qt.rgba(1, 1, 1, 0.92))
-                textColor: Kirigami.Theme.highlightColor
+                text: root.currentConnectionBound ? i18nd(root.translationDomain, "Current match") : ""
+                fillColor: Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(0, 0, 0, 0.18))
+                borderColor: Qt.tint(Kirigami.Theme.highlightColor, Qt.rgba(1, 1, 1, 0.15))
+                textColor: Kirigami.Theme.textColor
             }
 
             StatusBadge {
-                text: root.isLastUsed ? i18n("Last used") : ""
+                text: root.isLastUsed ? i18nd(root.translationDomain, "Last used") : ""
                 fillColor: Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1, 0.08))
                 textColor: Kirigami.Theme.textColor
             }
 
             StatusBadge {
-                text: root.autoRuleCount > 0 ? i18n("Auto %1", root.autoRuleCount) : ""
+                text: root.autoRuleCount > 0 ? i18nd(root.translationDomain, "Auto %1", root.autoRuleCount) : ""
                 fillColor: Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1, 0.08))
                 textColor: Kirigami.Theme.linkColor
             }
@@ -148,7 +158,9 @@ Rectangle {
             Layout.fillWidth: true
             color: Kirigami.Theme.disabledTextColor
             elide: Text.ElideRight
-            text: PresetLogic.describePreset(root.preset)
+            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            text: root.presetSummary
+            visible: root.rulesExpanded && root.presetSummary.length > 0
         }
 
         RowLayout {
@@ -158,32 +170,58 @@ Rectangle {
             PlasmaComponents3.Button {
                 enabled: !root.busy && !root.isEditing
                 icon.name: "view-refresh"
-                text: i18n("Restore")
+                text: i18nd(root.translationDomain, "Restore")
                 visible: !root.isEditing
+                implicitHeight: root.compactButtonHeight
+                icon.width: Kirigami.Units.iconSizes.small
+                icon.height: Kirigami.Units.iconSizes.small
+                leftPadding: root.compactButtonPadding * 1.2
+                rightPadding: root.compactButtonPadding * 1.2
+                topPadding: 1
+                bottomPadding: 1
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
                 onClicked: root.restoreClicked()
             }
 
             PlasmaComponents3.Button {
                 enabled: !root.busy
                 icon.name: "list-add"
-                text: i18n("Bind")
+                text: i18nd(root.translationDomain, "Bind")
                 visible: !root.isEditing && root.autoBindingAvailable && !root.currentConnectionBound
+                implicitHeight: root.compactButtonHeight
+                icon.width: Kirigami.Units.iconSizes.small
+                icon.height: Kirigami.Units.iconSizes.small
+                leftPadding: root.compactButtonPadding
+                rightPadding: root.compactButtonPadding
+                topPadding: 1
+                bottomPadding: 1
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
                 onClicked: root.bindAutoClicked()
             }
 
             PlasmaComponents3.Button {
                 enabled: !root.busy && root.renameText.trim().length > 0
                 icon.name: "dialog-ok"
-                text: i18n("Save")
+                text: i18nd(root.translationDomain, "Save")
                 visible: root.isEditing
+                leftPadding: root.compactButtonPadding
+                rightPadding: root.compactButtonPadding
+                topPadding: 2
+                bottomPadding: 2
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
                 onClicked: root.commitRename()
             }
 
             PlasmaComponents3.Button {
                 enabled: !root.busy
                 icon.name: "dialog-cancel"
-                text: i18n("Cancel")
+                text: i18nd(root.translationDomain, "Cancel")
                 visible: root.isEditing
+                leftPadding: root.compactButtonPadding
+                rightPadding: root.compactButtonPadding
+                topPadding: 2
+                bottomPadding: 2
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
                 onClicked: root.cancelRename()
             }
 
@@ -194,15 +232,23 @@ Rectangle {
             PlasmaComponents3.Button {
                 enabled: !root.busy
                 icon.name: root.rulesExpanded ? "go-up" : "go-down"
-                text: i18n("Rules (%1)", root.autoRuleCount)
+                text: i18nd(root.translationDomain, "Rules (%1)", root.autoRuleCount)
                 visible: !root.isEditing && root.autoRuleCount > 0
+                implicitHeight: root.compactButtonHeight
+                icon.width: Kirigami.Units.iconSizes.small
+                icon.height: Kirigami.Units.iconSizes.small
+                leftPadding: root.compactButtonPadding
+                rightPadding: root.compactButtonPadding
+                topPadding: 1
+                bottomPadding: 1
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
                 onClicked: root.toggleRulesExpanded()
             }
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: Math.max(2, root.compactSpacing * 0.75)
+            spacing: 2
             visible: !root.isEditing && root.autoRuleCount > 0 && root.rulesExpanded
 
             Repeater {
@@ -222,38 +268,43 @@ Rectangle {
                         : Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1, 0.04))
                     border.width: isCurrentRule ? 1 : 0
                     border.color: Kirigami.Theme.highlightColor
-                    implicitHeight: ruleRow.implicitHeight + (Math.max(2, root.compactSpacing * 0.75) * 2)
+                    implicitHeight: ruleRow.implicitHeight + 4
 
                     RowLayout {
                         id: ruleRow
                         anchors.fill: parent
-                        anchors.margins: Math.max(2, root.compactSpacing * 0.75)
+                        anchors.margins: 2
                         spacing: root.compactSpacing
 
                         PlasmaComponents3.Label {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
-                            text: PresetLogic.describeAutoTrigger(rule.trigger)
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            text: root.formatAutoTrigger(rule.trigger)
                         }
 
                         StatusBadge {
-                            text: ruleCard.isCurrentRule ? i18n("Current") : ""
-                            fillColor: Qt.tint(Kirigami.Theme.highlightColor, Qt.rgba(1, 1, 1, 0.88))
-                            textColor: Kirigami.Theme.highlightColor
+                            text: ruleCard.isCurrentRule ? i18nd(root.translationDomain, "Current") : ""
+                            fillColor: Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(0, 0, 0, 0.18))
+                            borderColor: Qt.tint(Kirigami.Theme.highlightColor, Qt.rgba(1, 1, 1, 0.15))
+                            textColor: Kirigami.Theme.textColor
                         }
 
                         QQC2.Switch {
                             checked: !!ruleCard.rule.enabled
                             enabled: !root.busy
                             text: ""
+                            implicitWidth: Kirigami.Units.gridUnit * 2.2
                             onClicked: root.autoRuleToggled(ruleCard.rule, checked)
                         }
 
                         PlasmaComponents3.ToolButton {
                             enabled: !root.busy
                             icon.name: "edit-delete"
-                            text: i18n("Delete")
+                            text: i18nd(root.translationDomain, "Delete")
                             display: PlasmaComponents3.AbstractButton.IconOnly
+                            implicitWidth: Kirigami.Units.iconSizes.smallMedium + 2
+                            implicitHeight: Kirigami.Units.iconSizes.smallMedium + 2
                             onClicked: root.autoRuleDeleted(ruleCard.rule)
                             QQC2.ToolTip.visible: hovered
                             QQC2.ToolTip.text: text

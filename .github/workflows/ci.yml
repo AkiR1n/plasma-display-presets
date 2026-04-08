@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-and-bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gettext \
+            libarchive-tools \
+            qml-module-qttest \
+            qtdeclarative5-dev-tools
+
+      - name: Run Tests
+        run: qmltestrunner -input tests
+
+      - name: Build Release Artifacts
+        run: ./scripts/build-release.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: display-presets-release
+          path: dist/*

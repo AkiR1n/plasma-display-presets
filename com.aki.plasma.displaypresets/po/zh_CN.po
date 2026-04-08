@@ -1,0 +1,202 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: com.aki.plasma.displaypresets\n"
+"POT-Creation-Date: 2026-04-08 00:00+0800\n"
+"PO-Revision-Date: 2026-04-08 00:00+0800\n"
+"Last-Translator: Aki <akir1n@outlook.com>\n"
+"Language-Team: Simplified Chinese\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Display Presets"
+msgstr "显示器预设"
+
+msgid "Save and restore monitor layouts"
+msgstr "保存并恢复显示器布局"
+
+msgid "No connected displays detected."
+msgstr "未检测到已连接的显示器。"
+
+msgid "Will auto-apply: %1"
+msgstr "将自动应用：%1"
+
+msgid "Rule found, but it is currently disabled"
+msgstr "已找到规则，但当前已禁用"
+
+msgid "Current connection is not bound"
+msgstr "当前连接尚未绑定"
+
+msgid "Automatic restore is off"
+msgstr "自动恢复已关闭"
+
+msgid "Display"
+msgstr "显示器"
+
+msgid "All outputs disabled"
+msgstr "所有输出均已禁用"
+
+msgid "Primary"
+msgstr "主显示器"
+
+msgid "Missing preset"
+msgstr "预设不存在"
+
+msgid "Automatic rule updated."
+msgstr "自动规则已更新。"
+
+msgid "Automatic rule saved."
+msgstr "自动规则已保存。"
+
+msgid "Automatic rule enabled."
+msgstr "自动规则已启用。"
+
+msgid "Automatic rule disabled."
+msgstr "自动规则已禁用。"
+
+msgid "Automatic rule deleted."
+msgstr "自动规则已删除。"
+
+msgid "An automatic rule referenced a preset that no longer exists and was removed."
+msgstr "某条自动规则引用了已不存在的预设，已将其移除。"
+
+msgid "Automatic restore snapshot failed"
+msgstr "自动恢复快照失败"
+
+msgid "kscreen-doctor snapshot failed"
+msgstr "kscreen-doctor 快照失败"
+
+msgid "Could not parse kscreen-doctor JSON output."
+msgstr "无法解析 kscreen-doctor 的 JSON 输出。"
+
+msgid "No outputs were detected in the current display configuration."
+msgstr "当前显示器配置中未检测到任何输出。"
+
+msgid "Preset updated."
+msgstr "预设已更新。"
+
+msgid "Preset saved."
+msgstr "预设已保存。"
+
+msgid "Preset not found."
+msgstr "未找到预设。"
+
+msgid "The automatic preset matched, but nothing could be restored."
+msgstr "已匹配到自动预设，但没有可恢复的内容。"
+
+msgid "Nothing could be restored from this preset."
+msgstr "此预设没有任何可恢复的内容。"
+
+msgid "Applying automatic preset failed"
+msgstr "应用自动预设失败"
+
+msgid "Applying preset failed"
+msgstr "应用预设失败"
+
+msgid "Missing: %1"
+msgstr "缺失：%1"
+
+msgid "Unsupported mode: %1"
+msgstr "不支持的模式：%1"
+
+msgid "Scale skipped on this session: %1"
+msgstr "当前会话跳过了缩放设置：%1"
+
+msgid "Primary output could not be restored."
+msgstr "无法恢复主输出。"
+
+msgid "current connection"
+msgstr "当前连接"
+
+msgid "Automatically applied \"%1\" for %2. %3"
+msgstr "已为 %2 自动应用“%1”。%3"
+
+msgid "Automatically applied \"%1\" for %2."
+msgstr "已为 %2 自动应用“%1”。"
+
+msgid "Restored %1 output."
+msgid_plural "Restored %1 outputs."
+msgstr[0] "已恢复 %1 个输出。"
+
+msgid "Restored %1 output. %2"
+msgid_plural "Restored %1 outputs. %2"
+msgstr[0] "已恢复 %1 个输出。%2"
+
+msgid "Preset renamed."
+msgstr "预设已重命名。"
+
+msgid "Preset deleted."
+msgstr "预设已删除。"
+
+msgid "Preset deleted. Removed %1 automatic rule."
+msgid_plural "Preset deleted. Removed %1 automatic rules."
+msgstr[0] "预设已删除，同时移除了 %1 条自动规则。"
+
+msgid "Current Connection"
+msgstr "当前连接"
+
+msgid "Memory Mode"
+msgstr "记忆模式"
+
+msgid "On"
+msgstr "开"
+
+msgid "Off"
+msgstr "关"
+
+msgid "Save Layout"
+msgstr "保存布局"
+
+msgid "Presets"
+msgstr "预设"
+
+msgid "%1 saved layout"
+msgid_plural "%1 saved layouts"
+msgstr[0] "已保存 %1 个布局"
+
+msgid "No saved layouts yet"
+msgstr "还没有已保存的布局"
+
+msgid "Save your current monitor setup here, then restore it later with one click."
+msgstr "先在这里保存当前显示器布局，之后即可一键恢复。"
+
+msgid "Overwrite Current Layout"
+msgstr "覆盖当前布局"
+
+msgid "Rename"
+msgstr "重命名"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "More actions"
+msgstr "更多操作"
+
+msgid "Current match"
+msgstr "当前匹配"
+
+msgid "Last used"
+msgstr "最近使用"
+
+msgid "Auto %1"
+msgstr "自动 %1"
+
+msgid "Restore"
+msgstr "恢复"
+
+msgid "Bind"
+msgstr "绑定"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Rules (%1)"
+msgstr "规则（%1）"
+
+msgid "Current"
+msgstr "当前"

@@ -9,12 +9,14 @@ import org.kde.plasma.plasmoid
 PlasmoidItem {
     id: root
 
+    readonly property string translationDomain: "plasma_applet_com.aki.plasma.displaypresets"
+
     Plasmoid.backgroundHints: PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground
     Plasmoid.icon: "video-display"
-    Plasmoid.title: i18n("Display Presets")
+    Plasmoid.title: i18nd(root.translationDomain, "Display Presets")
     Plasmoid.status: PlasmaCore.Types.ActiveStatus
     toolTipMainText: Plasmoid.title
-    toolTipSubText: i18n("Save and restore monitor layouts")
+    toolTipSubText: i18nd(root.translationDomain, "Save and restore monitor layouts")
 
     switchWidth: Kirigami.Units.gridUnit * 22
     switchHeight: Kirigami.Units.gridUnit * 22

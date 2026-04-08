@@ -3,19 +3,22 @@
     "KPlugin": {
         "Authors": [
             {
-                "Email": "aki@example.invalid",
-                "Name": "Aki"
+                "Email": "akir1n@outlook.com",
+                "Name": "AkiR1n"
             }
         ],
         "Category": "System Information",
-        "Description": "Save and restore display layouts with one click",
+        "Description": "Save and restore display layouts, with automatic recall for remembered setups",
+        "Description[zh_CN]": "保存并恢复显示器布局，并支持记忆模式自动恢复已绑定组态",
+        "Description[zh_TW]": "儲存並還原顯示器配置，並支援記憶模式自動還原已綁定組態",
         "EnabledByDefault": true,
         "Icon": "video-display",
         "Id": "com.aki.plasma.displaypresets",
         "License": "GPL-3.0-or-later",
         "Name": "Display Presets",
-        "Version": "0.1.0",
-        "Website": "https://kde.org/plasma-desktop"
+        "Name[zh_CN]": "显示器预设",
+        "Name[zh_TW]": "顯示器預設",
+        "Version": "1.0.0"
     },
     "X-Plasma-API": "declarativeappletscript",
     "X-Plasma-API-Minimum-Version": "6.0",

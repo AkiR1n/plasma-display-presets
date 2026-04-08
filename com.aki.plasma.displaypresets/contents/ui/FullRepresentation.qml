@@ -15,6 +15,7 @@ import "code/Shell.js" as Shell
 PlasmaExtras.Representation {
     id: root
 
+    readonly property string translationDomain: "plasma_applet_com.aki.plasma.displaypresets"
     property var presets: []
     property var autoRules: []
     property var expandedPresetStates: ({})
@@ -31,6 +32,7 @@ PlasmaExtras.Representation {
     property int observedConnectionCount: 0
     property string stableConnectionSignature: ""
     property string lastAutoAppliedSignature: ""
+    property bool connectionDetectionReady: false
     readonly property bool isWaylandSession: String(Qt.platform.pluginName).toLowerCase().indexOf("wayland") >= 0
     readonly property bool busy: commandRunner.busy || autoRunner.busy
     readonly property bool autoEnabled: Plasmoid.configuration.autoEnabled
@@ -39,22 +41,27 @@ PlasmaExtras.Representation {
     readonly property var currentMatchedRule: PresetLogic.findAutoRuleBySignature(root.autoRules, root.currentConnectionSignature)
     readonly property var currentEnabledRule: PresetLogic.findAutoRuleBySignature(root.autoRules, root.currentConnectionSignature, true)
     readonly property string currentConnectionDescription: root.hasCurrentConnection
-        ? PresetLogic.describeAutoTrigger(root.currentConnection)
-        : i18n("No connected displays detected.")
+        ? root.describeAutoTrigger(root.currentConnection)
+        : i18nd(root.translationDomain, "No connected displays detected.")
     readonly property string currentConnectionStateText: root.autoEnabled
         ? (root.currentEnabledRule
-            ? i18n("Will auto-apply: %1", root.presetNameForId(root.currentEnabledRule.presetId))
+            ? i18nd(root.translationDomain, "Will auto-apply: %1", root.presetNameForId(root.currentEnabledRule.presetId))
             : (root.currentMatchedRule
-                ? i18n("Rule found, but it is currently disabled")
-                : i18n("Current connection is not bound")))
-        : i18n("Automatic restore is off")
+                ? i18nd(root.translationDomain, "Rule found, but it is currently disabled")
+                : i18nd(root.translationDomain, "Current connection is not bound")))
+        : i18nd(root.translationDomain, "Automatic restore is off")
     readonly property color currentConnectionStateFillColor: root.autoEnabled && root.currentEnabledRule
-        ? Qt.tint(Kirigami.Theme.highlightColor, Qt.rgba(1, 1, 1, 0.88))
+        ? Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(0, 0, 0, 0.18))
         : (root.autoEnabled && root.currentMatchedRule
-            ? Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1, 0.10))
+            ? Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(0, 0, 0, 0.15))
             : Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1, 0.06)))
+    readonly property color currentConnectionStateBorderColor: root.autoEnabled && root.currentEnabledRule
+        ? Qt.tint(Kirigami.Theme.highlightColor, Qt.rgba(1, 1, 1, 0.15))
+        : (root.autoEnabled && root.currentMatchedRule
+            ? Qt.tint(Kirigami.Theme.textColor, Qt.rgba(1, 1, 1, 0.08))
+            : Qt.rgba(0, 0, 0, 0))
     readonly property color currentConnectionStateTextColor: root.autoEnabled && root.currentEnabledRule
-        ? Kirigami.Theme.highlightColor
+        ? Kirigami.Theme.textColor
         : (root.autoEnabled
             ? Kirigami.Theme.textColor
             : Kirigami.Theme.disabledTextColor)
@@ -75,6 +82,76 @@ PlasmaExtras.Representation {
 
     function connectionOverviewCommand() {
         return Shell.joinCommand(["kscreen-doctor", "-o"]);
+    }
+
+    function displayLabel(output) {
+        if (!output) {
+            return i18nd(root.translationDomain, "Display");
+        }
+
+        return output.savedName || output.name || output.matchKey || output.connectorName || i18nd(root.translationDomain, "Display");
+    }
+
+    function describePresetSummary(preset) {
+        var sanitizedPreset = PresetLogic.sanitizePreset(preset);
+        if (!sanitizedPreset || sanitizedPreset.outputs.length === 0) {
+            return "";
+        }
+
+        var enabledOutputs = [];
+        for (var i = 0; i < sanitizedPreset.outputs.length; i += 1) {
+            if (sanitizedPreset.outputs[i].enabled) {
+                enabledOutputs.push(sanitizedPreset.outputs[i]);
+            }
+        }
+
+        if (enabledOutputs.length === 0) {
+            return i18nd(root.translationDomain, "All outputs disabled");
+        }
+
+        return enabledOutputs.map(function(output) {
+            var parts = [];
+            if (output.isPrimary) {
+                parts.push(i18nd(root.translationDomain, "Primary"));
+            }
+
+            parts.push(root.displayLabel(output));
+
+            if (output.modeToken) {
+                parts.push(output.modeToken);
+            }
+
+            if (output.scale && Math.abs(output.scale - 1) > 0.001) {
+                parts.push("x" + PresetLogic.formatScale(output.scale));
+            }
+
+            return parts.join(" ");
+        }).join(" + ");
+    }
+
+    function describeAutoTrigger(trigger) {
+        var normalized = PresetLogic.normalizeAutoTrigger(trigger);
+        if (normalized.outputs.length === 0) {
+            return "";
+        }
+
+        var parts = [];
+        for (var i = 0; i < normalized.outputs.length; i += 1) {
+            var output = normalized.outputs[i];
+            var outputParts = [];
+
+            outputParts.push(output.connectorName || i18nd(root.translationDomain, "Display"));
+            if (output.type) {
+                outputParts.push(output.type);
+            }
+            if (output.deviceUuid) {
+                outputParts.push(PresetLogic.shortDeviceId(output.deviceUuid));
+            }
+
+            parts.push(outputParts.join(" "));
+        }
+
+        return parts.join(" + ");
     }
 
     function mergeContext(baseContext, extraContext) {
@@ -139,7 +216,7 @@ PlasmaExtras.Representation {
 
     function presetNameForId(presetId) {
         var preset = root.findPresetById(presetId);
-        return preset ? preset.name : i18n("Missing preset");
+        return preset ? preset.name : i18nd(root.translationDomain, "Missing preset");
     }
 
     function autoRulesForPreset(presetId) {
@@ -283,8 +360,8 @@ PlasmaExtras.Representation {
         }
 
         root.setStatus(Kirigami.MessageType.Positive, existingRule
-            ? i18n("Automatic rule updated.")
-            : i18n("Automatic rule saved."));
+            ? i18nd(root.translationDomain, "Automatic rule updated.")
+            : i18nd(root.translationDomain, "Automatic rule saved."));
     }
 
     function toggleAutoRule(rule, enabled) {
@@ -297,8 +374,8 @@ PlasmaExtras.Representation {
         }
 
         root.setStatus(Kirigami.MessageType.Positive, enabled
-            ? i18n("Automatic rule enabled.")
-            : i18n("Automatic rule disabled."));
+            ? i18nd(root.translationDomain, "Automatic rule enabled.")
+            : i18nd(root.translationDomain, "Automatic rule disabled."));
     }
 
     function deleteAutoRule(rule) {
@@ -308,7 +385,7 @@ PlasmaExtras.Representation {
             root.clearRulesExpanded(rule.presetId);
         }
 
-        root.setStatus(Kirigami.MessageType.Warning, i18n("Automatic rule deleted."));
+        root.setStatus(Kirigami.MessageType.Warning, i18nd(root.translationDomain, "Automatic rule deleted."));
     }
 
     function resetDetectionState() {
@@ -380,21 +457,21 @@ PlasmaExtras.Representation {
         var preset = root.findPresetById(rule.presetId);
         if (!preset) {
             root.persistAutoRules(PresetLogic.removeAutoRule(root.autoRules, rule.id));
-            root.setStatus(Kirigami.MessageType.Warning, i18n("An automatic rule referenced a preset that no longer exists and was removed."));
+            root.setStatus(Kirigami.MessageType.Warning, i18nd(root.translationDomain, "An automatic rule referenced a preset that no longer exists and was removed."));
             return;
         }
 
         root.runRestorePreparation(autoRunner, preset.id, "auto", {
             connectionSignature: connection.signature,
-            triggerDescription: PresetLogic.describeAutoTrigger(connection)
+            triggerDescription: root.describeAutoTrigger(connection)
         });
     }
 
     function handleSnapshotResult(runner, result, context) {
         if (result.exitCode !== 0) {
             var failureLabel = context.origin === "auto"
-                ? i18n("Automatic restore snapshot failed")
-                : i18n("kscreen-doctor snapshot failed");
+                ? i18nd(root.translationDomain, "Automatic restore snapshot failed")
+                : i18nd(root.translationDomain, "kscreen-doctor snapshot failed");
             root.setStatus(Kirigami.MessageType.Error, root.summarizeCommandFailure(failureLabel, result));
             return;
         }
@@ -403,7 +480,7 @@ PlasmaExtras.Representation {
         try {
             snapshot = JSON.parse(result.stdout);
         } catch (error) {
-            root.setStatus(Kirigami.MessageType.Error, i18n("Could not parse kscreen-doctor JSON output."));
+            root.setStatus(Kirigami.MessageType.Error, i18nd(root.translationDomain, "Could not parse kscreen-doctor JSON output."));
             return;
         }
 
@@ -415,7 +492,7 @@ PlasmaExtras.Representation {
             });
 
             if (!preset.outputs || preset.outputs.length === 0) {
-                root.setStatus(Kirigami.MessageType.Error, i18n("No outputs were detected in the current display configuration."));
+                root.setStatus(Kirigami.MessageType.Error, i18nd(root.translationDomain, "No outputs were detected in the current display configuration."));
                 return;
             }
 
@@ -427,14 +504,16 @@ PlasmaExtras.Representation {
             }
 
             root.suggestedPresetName = root.defaultPresetName();
-            root.setStatus(Kirigami.MessageType.Positive, existingPreset ? i18n("Preset updated.") : i18n("Preset saved."));
+            root.setStatus(Kirigami.MessageType.Positive, existingPreset
+                ? i18nd(root.translationDomain, "Preset updated.")
+                : i18nd(root.translationDomain, "Preset saved."));
             return;
         }
 
         if (context.action === "prepare-restore") {
             var presetToRestore = root.findPresetById(context.presetId);
             if (!presetToRestore) {
-                root.setStatus(Kirigami.MessageType.Error, i18n("Preset not found."));
+                root.setStatus(Kirigami.MessageType.Error, i18nd(root.translationDomain, "Preset not found."));
                 return;
             }
 
@@ -445,8 +524,8 @@ PlasmaExtras.Representation {
             if (restorePlan.args.length === 0) {
                 root.setStatus(Kirigami.MessageType.Warning,
                     context.origin === "auto"
-                        ? i18n("The automatic preset matched, but nothing could be restored.")
-                        : i18n("Nothing could be restored from this preset."));
+                        ? i18nd(root.translationDomain, "The automatic preset matched, but nothing could be restored.")
+                        : i18nd(root.translationDomain, "Nothing could be restored from this preset."));
                 return;
             }
 
@@ -460,8 +539,8 @@ PlasmaExtras.Representation {
     function handleRestoreResult(result, context) {
         if (result.exitCode !== 0) {
             var failureLabel = context.origin === "auto"
-                ? i18n("Applying automatic preset failed")
-                : i18n("Applying preset failed");
+                ? i18nd(root.translationDomain, "Applying automatic preset failed")
+                : i18nd(root.translationDomain, "Applying preset failed");
             root.setStatus(Kirigami.MessageType.Error, root.summarizeCommandFailure(failureLabel, result));
             return;
         }
@@ -477,16 +556,16 @@ PlasmaExtras.Representation {
         var severity = Kirigami.MessageType.Positive;
 
         if (plan.missingOutputs.length > 0) {
-            notes.push(i18n("Missing: %1", plan.missingOutputs.join(", ")));
+            notes.push(i18nd(root.translationDomain, "Missing: %1", plan.missingOutputs.join(", ")));
         }
         if (plan.incompatibleModes.length > 0) {
-            notes.push(i18n("Unsupported mode: %1", plan.incompatibleModes.join(", ")));
+            notes.push(i18nd(root.translationDomain, "Unsupported mode: %1", plan.incompatibleModes.join(", ")));
         }
         if (plan.skippedScaleOutputs.length > 0) {
-            notes.push(i18n("Scale skipped on this session: %1", plan.skippedScaleOutputs.join(", ")));
+            notes.push(i18nd(root.translationDomain, "Scale skipped on this session: %1", plan.skippedScaleOutputs.join(", ")));
         }
         if (plan.primaryMissing) {
-            notes.push(i18n("Primary output could not be restored."));
+            notes.push(i18nd(root.translationDomain, "Primary output could not be restored."));
         }
 
         if (notes.length > 0) {
@@ -499,17 +578,17 @@ PlasmaExtras.Representation {
         }
 
         if (context.origin === "auto") {
-            var triggerDescription = context.triggerDescription || i18n("current connection");
+            var triggerDescription = context.triggerDescription || i18nd(root.translationDomain, "current connection");
             var presetName = root.presetNameForId(context.presetId);
             root.setStatus(severity, notes.length > 0
-                ? i18n("Automatically applied \"%1\" for %2. %3", presetName, triggerDescription, notes.join(" "))
-                : i18n("Automatically applied \"%1\" for %2.", presetName, triggerDescription));
+                ? i18nd(root.translationDomain, "Automatically applied \"%1\" for %2. %3", presetName, triggerDescription, notes.join(" "))
+                : i18nd(root.translationDomain, "Automatically applied \"%1\" for %2.", presetName, triggerDescription));
             return;
         }
 
         root.setStatus(severity, notes.length > 0
-            ? i18n("Restored %1 output(s). %2", plan.matchedCount, notes.join(" "))
-            : i18n("Restored %1 output(s).", plan.matchedCount));
+            ? i18ndp(root.translationDomain, "Restored %1 output. %2", "Restored %1 outputs. %2", plan.matchedCount, notes.join(" "))
+            : i18ndp(root.translationDomain, "Restored %1 output.", "Restored %1 outputs.", plan.matchedCount));
     }
 
     function handleCommandFinished(runner, result, context) {
@@ -544,7 +623,7 @@ PlasmaExtras.Representation {
 
         root.persistPresets(PresetLogic.renamePreset(root.presets, preset.id, nextName, new Date().toISOString()));
         root.clearEditState();
-        root.setStatus(Kirigami.MessageType.Positive, i18n("Preset renamed."));
+        root.setStatus(Kirigami.MessageType.Positive, i18nd(root.translationDomain, "Preset renamed."));
     }
 
     function deletePreset(preset) {
@@ -565,8 +644,11 @@ PlasmaExtras.Representation {
 
         root.clearEditState();
         root.setStatus(Kirigami.MessageType.Warning, removedRuleCount > 0
-            ? i18n("Preset deleted. Removed %1 automatic rule(s).", removedRuleCount)
-            : i18n("Preset deleted."));
+            ? i18ndp(root.translationDomain,
+                "Preset deleted. Removed %1 automatic rule.",
+                "Preset deleted. Removed %1 automatic rules.",
+                removedRuleCount)
+            : i18nd(root.translationDomain, "Preset deleted."));
     }
 
     onAutoEnabledChanged: {
@@ -592,6 +674,7 @@ PlasmaExtras.Representation {
         id: detectRunner
         onFinished: function(result, context) {
             if (context && context.action === "detect-connection") {
+                root.connectionDetectionReady = true;
                 root.handleDetectionResult(result);
             }
         }
@@ -621,7 +704,7 @@ PlasmaExtras.Representation {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Kirigami.Units.smallSpacing
+        spacing: Math.max(3, Kirigami.Units.smallSpacing * 0.65)
 
         Rectangle {
             Layout.fillWidth: true
@@ -631,20 +714,20 @@ PlasmaExtras.Representation {
             border.color: root.currentEnabledRule
                 ? Kirigami.Theme.highlightColor
                 : Qt.tint(Kirigami.Theme.textColor, Qt.rgba(0, 0, 0, 0.78))
-            implicitHeight: statusCardContent.implicitHeight + (Kirigami.Units.largeSpacing * 2)
+            implicitHeight: statusCardContent.implicitHeight + (Kirigami.Units.smallSpacing * 2)
 
             ColumnLayout {
                 id: statusCardContent
                 anchors.fill: parent
-                anchors.margins: Kirigami.Units.smallSpacing
-                spacing: Math.max(4, Kirigami.Units.smallSpacing * 0.85)
+                anchors.margins: Math.max(4, Kirigami.Units.smallSpacing * 0.7)
+                spacing: Math.max(3, Kirigami.Units.smallSpacing * 0.65)
 
                 RowLayout {
                     Layout.fillWidth: true
 
                     PlasmaComponents3.Label {
                         font.weight: Font.DemiBold
-                        text: i18n("Current Connection")
+                        text: i18nd(root.translationDomain, "Current Connection")
                     }
 
                     Item {
@@ -653,14 +736,14 @@ PlasmaExtras.Representation {
 
                     QQC2.BusyIndicator {
                         running: detectRunner.busy
-                        visible: running
+                        visible: running && !root.connectionDetectionReady
                         implicitWidth: Kirigami.Units.iconSizes.small
                         implicitHeight: Kirigami.Units.iconSizes.small
                     }
 
                     QQC2.Switch {
                         checked: root.autoEnabled
-                        text: checked ? i18n("On") : i18n("Off")
+                        text: i18nd(root.translationDomain, "Memory Mode")
                         onClicked: Plasmoid.configuration.autoEnabled = checked
                     }
                 }
@@ -674,6 +757,7 @@ PlasmaExtras.Representation {
                 StatusBadge {
                     Layout.alignment: Qt.AlignLeft
                     fillColor: root.currentConnectionStateFillColor
+                    borderColor: root.currentConnectionStateBorderColor
                     text: root.currentConnectionStateText
                     textColor: root.currentConnectionStateTextColor
                 }
@@ -682,7 +766,7 @@ PlasmaExtras.Representation {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
+            spacing: Math.max(3, Kirigami.Units.smallSpacing * 0.65)
 
             QQC2.TextField {
                 id: nameField
@@ -697,7 +781,12 @@ PlasmaExtras.Representation {
                 id: saveButton
                 enabled: !root.busy
                 icon.name: "document-save"
-                text: i18n("Save Layout")
+                text: i18nd(root.translationDomain, "Save Layout")
+                leftPadding: Math.max(4, Kirigami.Units.smallSpacing * 0.8)
+                rightPadding: Math.max(4, Kirigami.Units.smallSpacing * 0.8)
+                topPadding: 2
+                bottomPadding: 2
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
                 onClicked: root.savePreset(null)
             }
 
@@ -733,14 +822,14 @@ PlasmaExtras.Representation {
                 Column {
                     id: contentColumn
                     width: scrollArea.width
-                    spacing: Math.max(4, Kirigami.Units.smallSpacing * 0.85)
+                    spacing: Math.max(3, Kirigami.Units.smallSpacing * 0.65)
 
                     RowLayout {
                         width: parent.width
 
                         PlasmaComponents3.Label {
                             font.weight: Font.DemiBold
-                            text: i18n("Presets")
+                            text: i18nd(root.translationDomain, "Presets")
                         }
 
                         Item {
@@ -748,7 +837,9 @@ PlasmaExtras.Representation {
                         }
 
                         StatusBadge {
-                            text: root.presets.length > 0 ? i18n("%1 saved", root.presets.length) : ""
+                            text: root.presets.length > 0
+                                ? i18ndp(root.translationDomain, "%1 saved layout", "%1 saved layouts", root.presets.length)
+                                : ""
                             fillColor: Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1, 0.08))
                             textColor: Kirigami.Theme.disabledTextColor
                         }
@@ -773,6 +864,8 @@ PlasmaExtras.Representation {
                                 busy: root.busy
                                 currentConnectionBound: root.isPresetCurrentMatch(preset.id)
                                 currentConnectionSignature: root.currentConnectionSignature
+                                formatAutoTrigger: root.describeAutoTrigger
+                                formatPresetSummary: root.describePresetSummary
                                 isEditing: root.editingPresetId === preset.id
                                 isLastUsed: Plasmoid.configuration.lastUsedPresetId === preset.id
                                 preset: parent.modelData
@@ -806,8 +899,8 @@ PlasmaExtras.Representation {
                         width: Math.min(Math.max(parent.width - (Kirigami.Units.gridUnit * 2), 0), Kirigami.Units.gridUnit * 18)
                         visible: root.presets.length === 0
                         iconName: "video-display"
-                        text: i18n("No saved layouts yet")
-                        explanation: i18n("Save your current monitor setup here, then restore it later with one click.")
+                        text: i18nd(root.translationDomain, "No saved layouts yet")
+                        explanation: i18nd(root.translationDomain, "Save your current monitor setup here, then restore it later with one click.")
                     }
                 }
             }

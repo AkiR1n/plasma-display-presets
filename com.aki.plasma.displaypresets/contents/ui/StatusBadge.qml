@@ -12,8 +12,8 @@ Rectangle {
     property color fillColor: Qt.tint(Kirigami.Theme.backgroundColor, Qt.rgba(1, 1, 1, 0.08))
     property color textColor: Kirigami.Theme.textColor
     property color borderColor: Qt.rgba(0, 0, 0, 0)
-    property real horizontalPadding: Kirigami.Units.smallSpacing
-    property real verticalPadding: Math.max(2, Kirigami.Units.smallSpacing * 0.25)
+    property real horizontalPadding: Math.max(6, Kirigami.Units.smallSpacing * 0.85)
+    property real verticalPadding: 2
 
     visible: root.text.length > 0
     radius: Math.round(implicitHeight / 2)
@@ -28,6 +28,7 @@ Rectangle {
         anchors.centerIn: parent
         color: root.textColor
         font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.weight: Font.Medium
         text: root.text
     }
 }
