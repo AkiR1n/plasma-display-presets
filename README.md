@@ -62,6 +62,26 @@ qmltestrunner -input tests
 - `SHA256SUMS`
   校验和文件。
 
+### 发布到 GitHub Release
+
+如果已经安装并登录 `gh`，可直接创建或更新当前版本的 GitHub Release 草稿：
+
+```bash
+./scripts/publish-github-release.sh --rebuild
+```
+
+需要直接公开发布时，可改为：
+
+```bash
+./scripts/publish-github-release.sh --rebuild --publish
+```
+
+脚本默认会读取：
+
+- tag: `v<Version>`
+- 发布说明: `docs/github-release-v<Version>.md`
+- 附件: `dist/` 下的 bundle、`.plasmoid` 和 `SHA256SUMS`
+
 ### 安装发布包
 
 推荐最终用户下载 `-bundle.tar.gz`，因为它会一起安装翻译文件：
@@ -157,6 +177,26 @@ This creates:
   End-user bundle with the plasmoid, compiled translations, and `install.sh`.
 - `SHA256SUMS`
   Checksums for the release files.
+
+### Publishing to GitHub Releases
+
+If `gh` is installed and authenticated, create or update a draft GitHub release for the current version with:
+
+```bash
+./scripts/publish-github-release.sh --rebuild
+```
+
+To publish immediately instead of creating a draft:
+
+```bash
+./scripts/publish-github-release.sh --rebuild --publish
+```
+
+By default, the script uses:
+
+- tag: `v<Version>`
+- notes: `docs/github-release-v<Version>.md`
+- assets: the bundle archive, `.plasmoid`, and `SHA256SUMS` from `dist/`
 
 ### Installing a Release Bundle
 
