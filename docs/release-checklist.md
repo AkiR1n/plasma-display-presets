@@ -4,8 +4,8 @@
 
 - Add screenshots or a short demo GIF before publishing the repository or release page.
 - Add the final public repository URL back into `metadata.json` once the repository location is fixed.
-- Create a signed tag such as `v1.0.0`.
-- Write release notes for GitHub or your chosen release page.
+- Push the local commit and tag to the public remote.
+- Review and publish [docs/github-release-v1.0.0.md](github-release-v1.0.0.md) as the first GitHub release note.
 
 ## Before Publishing
 
