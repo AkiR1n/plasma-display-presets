@@ -18,7 +18,8 @@
         "Name": "Display Presets",
         "Name[zh_CN]": "显示器预设",
         "Name[zh_TW]": "顯示器預設",
-        "Version": "1.0.0"
+        "Version": "1.0.0",
+        "Website": "https://github.com/AkiR1n/plasma-display-presets"
     },
     "X-Plasma-API": "declarativeappletscript",
     "X-Plasma-API-Minimum-Version": "6.0",
