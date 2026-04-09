@@ -28,6 +28,9 @@ jobs:
             qtdeclarative5-dev-tools
 
       - name: Run Tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
         run: qmltestrunner -input tests
 
       - name: Build Release Artifacts
